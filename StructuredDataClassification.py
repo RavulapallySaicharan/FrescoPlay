@@ -8,6 +8,8 @@ Created on Tue Nov 20 01:14:23 2018
 # Importing required packages
 import pandas as pd
 from sklearn import preprocessing
+import numpy as np
+from sklearn.preprocessing import Imputer
 
 # Read data from the churn.csv file
 churn = pd.read_csv(r'C:\Users\ravul\Downloads\DKD2e_data_sets\Data sets\churn.csv', sep=',')
@@ -43,13 +45,25 @@ print('\nCategorical features in the data set : ',churnFeatureCat.columns.values
       '\nData types of the categorical features : \n',churnFeatureCat.dtypes)
 
 ## Handling categorical data 
+
 ### Convert to boolean
 boolColumns = ["Int'l Plan", 'VMail Plan']
-churnFeature = churnFeature[boolColumns] == 'yes'
+churnFeature[boolColumns] = churnFeature[boolColumns] == 'yes'
 
 ### Label Encoding (Technique used to map the non-numerical labels to numerical labels)
-print(churnFeature['Area Code'])
 labelEncoder = preprocessing.LabelEncoder()
 churnFeature['Area Code'] = labelEncoder.fit_transform(churnFeature['Area Code'])
-print(churnFeature['Area Code'])
+
+### One hot encoding (OHE) or Dummy encoding (Technique that maps categorical values onto set of columns that has values 1 or 0 indicating presence of that feature )
+print('\nShape of data set before the OHE :', churnFeature.shape,
+      '\nNo of Unique states',churnFeature['State'].unique())
+churnDumm = pd.get_dummies(churnFeature, columns=['State'], prefix = ['State'])
+print('\nShape of the dummies after OHE',churnDumm.shape)
+churnMatrix = churnDumm.as_matrix().astype(np.float)
+print('\n\n',churnMatrix)
+
+## Missing values
+imputer = Imputer(missing_values ='NaN', strategy='mean', axis=0)
+churnMatrix = imputer.fit_transform(churnMatrix)
+print('\n\n',churnMatrix)
 
