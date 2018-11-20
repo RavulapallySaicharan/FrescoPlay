@@ -17,6 +17,12 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.svm import LinearSVC
+from sklearn.cross_validation import StratifiedShuffleSplit
+
 
 # Read data from the churn.csv file
 churn = pd.read_csv(r'C:\Users\ravul\Downloads\DKD2e_data_sets\Data sets\churn.csv', sep=',')
@@ -93,7 +99,7 @@ print('\nShape of the train data :',trainData.shape,
       '\nShape of the test label :',testLabel.shape)
 
 
-### Classification Algorithms
+# Classification Algorithms
 ## Decision Tree Classifier
 DTClassifier = DecisionTreeClassifier(random_state = seed)
 DTClassifier = DTClassifier.fit(trainData, trainLabel) # Training a Decision Tree model
@@ -108,9 +114,9 @@ score = NBClassifier.score(testData, testLabel)
 print('\nNavie Bayes Classifier score is :',score)
 
 ## Scochastic Gradient Descent Classifier
-SGDClassifier = SGDClassifier()
-SGDClassifier = SGDClassifier.fit(trainData, trainLabel) # Training a SGD classifier
-score = SGDClassifier.score(testData, testLabel)
+SGDclassifier = SGDClassifier()
+SGDclassifier = SGDclassifier.fit(trainData, trainLabel) # Training a SGD classifier
+score = SGDclassifier.score(testData, testLabel)
 print('\nScochastic Gradient Descent Classifier score is :',score)
 
 ## SVM Support Vector Machine
@@ -130,3 +136,27 @@ RFClassifier = RFClassifier.fit(trainData, trainLabel)
 score = RFClassifier.score(testData, testLabel)
 print('\nRadom Forest Classifier2 (tuned) score is :', score)
 
+
+## Cross Validation
+
+cross_val = StratifiedShuffleSplit(churnTarget,1, test_size=0.1, random_state=seed)
+
+classifiers = [
+    ('Decision Tree Classifier',DecisionTreeClassifier()),
+    ('Navie Bayes', GaussianNB()),
+    ('Scochastic Gradient Descent',SGDClassifier(loss='modified_huber', shuffle=True)),
+    ('Support Vector Classifier',SVC(kernel="linear", C=0.025)),
+    ('K Nearest Neighbors',KNeighborsClassifier()),
+    ('One Vs Rest Classifier', OneVsRestClassifier(LinearSVC())),
+    ('Random Forest Classifier',RandomForestClassifier(max_depth=5, n_estimators=10, max_features=10)),
+    ('Ada Boost Classifier', AdaBoostClassifier()),
+   ]
+
+for clf in classifiers:
+    score=0
+    for trainIndex, testIndex in cross_val:
+        trainDataCV, testDataCV = churnMatrix[trainIndex], churnMatrix[testIndex]
+        trainLabelCV, testLabelCV = churnTarget[trainIndex], churnTarget[testIndex]
+        clf[1].fit(trainDataCV, trainLabelCV)
+        score=score+clf[1].score(testDataCV, testLabelCV)
+    print('\n',clf[0],' after Cross Validation :',score)
